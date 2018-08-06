@@ -1,0 +1,7 @@
+.ropeproject
+secrets.txt
+__pycache__
+secrets.py
+settings.db
+tests.py
+*.log
