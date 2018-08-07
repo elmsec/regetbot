@@ -2,7 +2,7 @@
 A Telegram bot to get book, movie, TV show, author, band, game recommendations based on your likes.
 
 * Talk to [Reget Bot on Telegram](https://t.me/regetbot)  
-* My [blog post](http://www.canelma.com/blog/telegram-icin-yeni-chat-bot-yazdim-reget-bot/) about Reget Bot in Turkish
+* My [note](https://elma.pw/tr/notes/reget-bot/) about Reget Bot in Turkish
 
 ## English:
 
