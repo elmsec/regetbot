@@ -16,7 +16,9 @@ import time
 import logging
 from tdclass import TasteDive
 from secrets import _secret
-from dbhelper import DBHelper
+# from dbhelper import DBHelper
+from database import DB, User
+from datetime import datetime
 from threading import Thread
 from functools import wraps
 from telegram import (
@@ -52,9 +54,6 @@ fh.setLevel(logging.INFO)
 fh.setFormatter(logging.Formatter(
     '%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
 logger.addHandler(fh)
-
-# db handler to perform database actions
-db = DBHelper()
 
 # list of admins to restrict other users from unauthorized functions
 LIST_OF_ADMINS = [_secret['admin_id']]
@@ -137,10 +136,15 @@ def restricted(func):
 def start(bot, update, args):
     try:
         user = update.effective_user
-        db.add_user(
-            user.id, user.username, user.first_name, user.last_name)
+        new_user = User(
+            telegram_id=user.id,
+            username=user.username,
+            first_name=user.first_name,
+            last_name=user.last_name,
+        )
+        new_user.save()
     except Exception as e:
-        logger.info(e)
+        logger.error(e)
     finally:
         message = (
             '👋 Hi, <b>{}</b>!\n\n'
@@ -167,36 +171,50 @@ def auto_fill_up(bot, job):
     user_data = job.context['user_data']
     user_id = job.context['user_id']
 
-    db.update_user(user_id, 'total_request', 0)
-    db.update_user(user_id, 'time_stamp', int(time.time()))
+    try:
+        user = User.get(telegram_id=user_id)
+
+        user.total_request = 0
+        user.timestamp = datetime.now()
+        user.save()
+    except Exception as e:
+        logger.error(e)
+
     if user_data['fill_up_notify'] is True:
         user_data['fill_up_notify'] = False
         message = (
-            '✅ The time has come!\nYour 10 query right has been filled up.'
+            '✅ The time has come!\n'
+            'Your credits has been filled up for 10 new requests.'
             )
         bot.send_message(chat_id=user_id, text=message)
 
 
 def answer_user(bot, update, job_queue, user_data=None, result_type=None):
     user_id = update.effective_user.id
-    user = db.get_user(user_id)
-    user_total_requests = user['total_request'] + 1  # +1 for this request
+    user = User.get_or_none(telegram_id=user_id)
+
+    if not user:
+        logger.warning('User not found.')
+        return
+
+    user_total_requests = user.total_request + 1  # +1 for this request
     query = user_data['query']
     update_message = update.message or update.callback_query.message
 
     # get result type from database
-    user_result_type = result_type or user['result_type']
+    user_result_type = result_type or user.result_type
 
     # request limit control
-    time_now = int(time.time())
-    user_past_time = time_now - user['time_stamp']
+    time_now = datetime.now()
+    user_past_time = int((time_now - user.timestamp).total_seconds())
 
     if user_total_requests >= user_request_limit:
-        remaining_time = time_limit - user_past_time
+        remaining_time = (time_limit - user_past_time)
 
         if not job_queue.get_jobs_by_name(
                 '{}_auto_fill_up'.format(str(user_id))):
-            db.update_user(user_id, 'time_stamp', time_now)
+            user.timestamp = time_now
+            user.save()
             remaining_time = time_limit
             job_queue.run_once(
                 auto_fill_up,
@@ -205,7 +223,7 @@ def answer_user(bot, update, job_queue, user_data=None, result_type=None):
                 name='{}_auto_fill_up'.format(str(user_id)))
             user_data['fill_up_notify'] = False
 
-        mins, secs = divmod(remaining_time, 60)
+        mins, secs = divmod(int(remaining_time), 60)
         keyboard = InlineKeyboardMarkup([
             [InlineKeyboardButton(
                 'Yes, notify me! 😎', callback_data='notify')],
@@ -235,7 +253,8 @@ def answer_user(bot, update, job_queue, user_data=None, result_type=None):
     elif user_total_requests < user_request_limit and \
             user_past_time >= time_limit:
         user_total_requests = 1  # there is already a line to use this variable
-        db.update_user(user_id, 'time_stamp', time_now)
+        user.timestamp = time_now
+        user.save()
 
     if update.callback_query:
         sent_message = bot.edit_message_text(
@@ -249,22 +268,26 @@ def answer_user(bot, update, job_queue, user_data=None, result_type=None):
         )
 
     tastedive = TasteDive(_secret['tastedive_key'])
-    db.update_user(user_id, 'total_request', user_total_requests)
+    user.total_request = user_total_requests
+    user.save()
 
+    no_error = False
     try:
         result = tastedive.get_similar(
             query=query,
-            info=user['show_info'],
-            verbose=user['show_info'],
-            limit=user['max_result'],
+            info=user.show_info,
+            verbose=user.show_info,
+            limit=user.max_result,
             q_type=user_result_type or '',
         )
 
         result = tastedive.prettify(*result)
         message = '👌🏻 Successful.'
+        no_error = True
     except ValueError as e:
         message = e.__str__()
     except KeyError as e:
+        logger.error(e)
         message = 'Something bad happened. Try again later.'
     finally:
         bot.edit_message_text(
@@ -280,23 +303,28 @@ def answer_user(bot, update, job_queue, user_data=None, result_type=None):
         [
             InlineKeyboardButton('💾 Save', callback_data='save_that'),
             InlineKeyboardButton(
-                '⭐️⭐️⭐️⭐️⭐️', url='https://t.me/storebot?start=regetbot')
+                '⭐️⭐️⭐️⭐️⭐️', url='https://t.me/tlgrmcbot?start=regetbot-bot')
         ]
     ]
 
-    update_message.reply_text(
-        result,
-        parse_mode='HTML',
-        disable_web_page_preview=True,
-        reply_markup=InlineKeyboardMarkup(keyboard)
-    )
+    if no_error:
+        update_message.reply_text(
+            result,
+            parse_mode='HTML',
+            disable_web_page_preview=True,
+            reply_markup=InlineKeyboardMarkup(keyboard)
+        )
 
 
 def text_messages(bot, update, job_queue, user_data):
     query = update.message.text
     user_id = update.effective_user.id
-    user = db.get_user(user_id)
-    ask_or_not = user['result_type'] == 'always_ask' or None
+    user = User.get_or_none(telegram_id=user_id)
+    ask_or_not = user.result_type == 'always_ask' or None
+
+    if not user:
+        logger.warning('User not found.')
+        return
 
     user_data['query'] = query
 
@@ -330,7 +358,7 @@ def text_messages(bot, update, job_queue, user_data):
                 chat_id=update.message.chat_id,
                 message_id=user_data['message_id']
             )
-        except Exception as e:
+        except Exception:
             logger.warning('Old message could not be edited.')
 
     user_data['message_id'] = sent_message.message_id
@@ -386,7 +414,7 @@ def callbacks(bot, update, user_data, job_queue):
         query.answer('✅ Reminder has set.')
         edit_text = msg_text.find('Or if you want')
         edit_text = msg_text[:edit_text] + (
-            "<b>I'll call you when the time has come</b>"
+            "<b>I'll call you when the time has come.</b>"
         )
         user_data['fill_up_notify'] = True
     elif query.data == 'cancel':
@@ -429,11 +457,15 @@ def setting_callbacks(bot, update, job_queue):
     query = update.callback_query
     setting = query.data.split(':')[1]
     user_id = update.effective_user.id
-    user = db.get_user(user_id)
+    user = User.get_or_none(telegram_id=user_id)
     keyboard = list()
 
+    if not user:
+        logger.warning('User not found.')
+        return
+
     if setting == 'max_result':
-        max_result = user['max_result']
+        max_result = user.max_result
         buttons = [
             InlineKeyboardButton(
                 '{}'.format(i+1),
@@ -474,7 +506,7 @@ def setting_callbacks(bot, update, job_queue):
             buttons[4:6],
             buttons[6:],
         ]
-        result_type = user['result_type'].replace('_', ' ')
+        result_type = user.result_type.replace('_', ' ')
         edit_text = (
             '<b>RESULT TYPE</b>\n'
             'This setting affects the results.\n'
@@ -482,12 +514,12 @@ def setting_callbacks(bot, update, job_queue):
             'Your current result type is <b>{}</b>.'
             ).format(result_type)
     elif setting == 'remainings':
-        time_now = int(time.time())
-        user_time = user['time_stamp']
-        remaining_requests = 10-int(user['total_request'])
-        remain = time_limit - (time_now-user_time)
+        time_now = datetime.now()
+        user_time = user.timestamp
+        remaining_requests = 10-user.total_request
+        remain = time_limit - (time_now-user_time).total_seconds()
 
-        mins, secs = divmod(remain, 60)
+        mins, secs = divmod(int(remain), 60)
         if remain < 0 and remaining_requests > 0:
             mins, secs = 0, 0
 
@@ -495,7 +527,7 @@ def setting_callbacks(bot, update, job_queue):
             '<b>DETAILS:</b>\n'
             'You may check your request limit here. Every user has 10 '
             'request right per hour to perform new query. \n\n'
-            '💎 <b>Request rights:</b> {}\n'
+            '💎 <b>Request credits:</b> {}\n'
             '⏱ <b>Time to fill up:</b> {}min {}sec'
             ).format(remaining_requests, mins, secs)
     elif setting == 'reset_all':
@@ -531,18 +563,24 @@ def change_settings(bot, update):
     setting = query.data.split(':')[1]
     value = query.data.split(':')[2]
     user_id = update.effective_user.id
+    user = User.get_or_none(telegram_id=user_id)
+
+    if not user:
+        logger.warning('User not found.')
+        return
 
     if setting == 'max_result':
-        db.update_user(user_id, 'max_result', value)
+        user.max_result = value
         edit_text = '✅ The max result has limited to {}.'.format(value)
     elif setting == 'result_type':
-        db.update_user(user_id, 'result_type', value)
+        user.result_type = value
         value = value.replace('_', ' ')
         edit_text = '✅ The result type has defined as {}.'.format(value)
     elif setting == 'reset_all':
-        db.update_user(user_id, 'max_result', 5)
-        db.update_user(user_id, 'result_type', 'all')
+        user.max_result = 5
+        user.result_type = 'all'
         edit_text = '✅ Your settings have been reset.'
+    user.save()
 
     keyboard = settings_keyboard
 
@@ -596,6 +634,10 @@ def error(bot, update, error):
 
 
 def main():
+    # Create the database and its necessary tables at startup
+    DB.connect()
+    DB.create_tables([User])
+
     # Create the Updater and pass it your bot's token.
     updater = Updater(_secret['bot_key'])
 

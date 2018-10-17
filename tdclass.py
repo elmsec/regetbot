@@ -32,8 +32,8 @@ class TasteDive():
             'k': self.key,
             'q': query,
             'type': q_type,
-            'info': info,
-            'verbose': verbose,
+            'info': 1 if info is True else 0,
+            'verbose': 1 if verbose is True else 0,
             'limit': limit
         }
         # q_types = music, movies, shows, books, authors, games
@@ -89,8 +89,7 @@ class TasteDive():
                     "<b>{} - {}</b> {}\n"
                     "{}\n"
                     ).format(
-                        num, name, category, w_teaser, w_url,
-                        'Wiki', y_url, 'YouTube')
+                        num, name, category, w_teaser.strip())
                 if w_url:
                     results += "<a href=\"{}\">{}</a>".format(w_url, 'Wiki')
 

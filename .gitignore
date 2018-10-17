@@ -5,3 +5,4 @@ secrets.py
 settings.db
 tests.py
 *.log
+*.bak
