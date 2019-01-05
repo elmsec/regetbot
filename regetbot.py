@@ -1,5 +1,5 @@
 """
-    Author:     E. Can Elma
+    Author:     Eyup Can Elma
     Date:       9 Apr. 2018
     Github:     @canelma
     Twitter:    @_canelma
@@ -76,7 +76,17 @@ help_text = (
     'I\'m not Google. I mean, when you type something wrong, I can\'t '
     'understand what you mean. Uh, that hurts me. 🙈 So, please be careful '
     'about typos.\n\n'
-    'Don\'t forget to check /tips!'
+    'Don\'t forget to check /tips!\n\n'
+    '<b>Frequently Asked Questions:</b>\n'
+    '<a href="https://telegramic.org/bot/regetbot/faqs">Touch here</a> '
+    'to view all frequently asked questions.'
+)
+
+issue_text = (
+    'You can ask a question, create an issue or see latest issues by '
+    'visiting the "issues" page of Reget Bot on the Telegramic website. \n\n'
+    '<a href="https://telegramic.org/bot/regetbot/issues/">Touch here</a> '
+    'to go to the issues page of Reget Bot.'
 )
 
 tips_text = (
@@ -160,7 +170,11 @@ def start(bot, update, args):
 
 
 def help_me(bot, update):
-    update.message.reply_html(help_text)
+    update.message.reply_html(help_text, disable_web_page_preview=True)
+
+
+def issues_comm(bot, update):
+    update.message.reply_html(issue_text, disable_web_page_preview=True)
 
 
 def tips(bot, update):
@@ -655,6 +669,7 @@ def main():
 
     dp.add_handler(CommandHandler('start', start, pass_args=True))
     dp.add_handler(CommandHandler('help', help_me))
+    dp.add_handler(CommandHandler('issues', issues_comm))
     dp.add_handler(CommandHandler('tips', tips))
 
     dp.add_handler(CommandHandler(
