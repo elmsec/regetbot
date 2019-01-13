@@ -93,13 +93,13 @@ tips_text = (
     '<b>Useful Hints and Implementations</b>\n'
     'Here are good implementations to get better results. Only for you!\n\n'
     '🔘 <b>Multiple keyword at the same time</b>\n'
-    'If you want to search with multiple things, let\'s say "Matrix" and '
+    'If you want to search with multiple inputs, let\'s say "Matrix" and '
     '"Fight Club", to get related things to both of them, you can use '
     'commas to use these inputs together.\n\n'
     '<b>For example:</b> <i>Matrix, Fight Club</i>\n\n'
     '🔘 <b>Specify the type of the thing</b>\n'
     'For example, Fight Club is the name of a book and also of a movie. '
-    'But, how do you tell me which one of them fits to your case? You can use '
+    'But, how do you tell me which one of them fits your case? You can use '
     '"band:", "movie:", "show:", "book:", "author:" or "game:" operators.\n\n'
     '<b>For example:</b> <i>book:Fight Club, movie:Matrix</i>'
 )
@@ -108,14 +108,14 @@ tips_text = (
 settings_text = (
     'You can manage your settings here. Let me explain what they do.\n\n'
     '<b>Max Results</b>\n'
-    'This setting defines the maximum number of recommendations. '
+    'This setting sets the maximum number of recommendations. '
     'You can get n result with this setting.\n\n'
     '<b>Result Type</b>\n'
     'Let\'s say you entered a movie name and there are books, movies and '
-    'series related it. I\'ll show you all of them. But you can choice the '
+    'series related to it. I\'ll show you all of them. But you can choose the '
     'result type so I show you only this type of results.\n\n'
-    '<b>Remainings</b>\n'
-    'This will tell you the remaining request rights of yours.\n\n'
+    '<b>Remaining Request Tokens</b>\n'
+    'This will show you your remaining request tokens.\n\n'
     '<b>Reset All</b>\n'
     'This resets your configuration.'
 )
@@ -125,7 +125,7 @@ settings_keyboard = InlineKeyboardMarkup([
         InlineKeyboardButton('Result Type', None, 'set:result_type'),
     ],
     [
-        InlineKeyboardButton('Remainings', None, 'set:remainings'),
+        InlineKeyboardButton('Remaining Tokens', None, 'set:remainings'),
         InlineKeyboardButton('Reset All', None, 'set:reset_all'),
     ]
 ])
@@ -158,7 +158,7 @@ def start(bot, update, args):
     finally:
         message = (
             '👋 Hi, <b>{}</b>!\n\n'
-            'I can suggest good things according to your favorite '
+            'I can suggest something according to your favorite '
             'musics/bands, movies, TV shows/series, books, authors and games.'
             '\n\n'
             '<b>Do you need help?</b>\n'
@@ -198,7 +198,7 @@ def auto_fill_up(bot, job):
         user_data['fill_up_notify'] = False
         message = (
             '✅ The time has come!\n'
-            'Your credits has been filled up for 10 new requests.'
+            'Your token pocket has been filled up with 10 new request tokens.'
             )
         bot.send_message(chat_id=user_id, text=message)
 
@@ -240,15 +240,15 @@ def answer_user(bot, update, job_queue, user_data=None, result_type=None):
         mins, secs = divmod(int(remaining_time), 60)
         keyboard = InlineKeyboardMarkup([
             [InlineKeyboardButton(
-                'Yes, notify me! 😎', callback_data='notify')],
+                'Yes, call me! 😎', callback_data='notify')],
             [InlineKeyboardButton(
                 'No, thanks. 🙄', callback_data='cancel')],
         ])
 
         message = (
-            '🥀 <b>Sorry. </b> You can do only 10 requests per hour.\n\n'
+            '🥀 <b>Sorry. </b> You can only use 10 request tokens per hour.\n\n'
             '⏱ Come back {}min {}sec later. '
-            'Or if you want, I\'ll call you when the time has come.'
+            'Or if you want me to do, I can call you when the time has come.'
         ).format(mins, secs)
 
         if user_total_requests > user_request_limit:
@@ -373,7 +373,7 @@ def text_messages(bot, update, job_queue, user_data):
                 message_id=user_data['message_id']
             )
         except Exception:
-            logger.warning('Old message could not be edited.')
+            logger.warning('Old message can not be edited.')
 
     user_data['message_id'] = sent_message.message_id
 
@@ -425,7 +425,7 @@ def callbacks(bot, update, user_data, job_queue):
         edit_text = settings_text
         markup = settings_keyboard
     elif query.data == 'notify':
-        query.answer('✅ Reminder has set.')
+        query.answer('✅ A new reminder has been set.')
         edit_text = msg_text.find('Or if you want')
         edit_text = msg_text[:edit_text] + (
             "<b>I'll call you when the time has come.</b>"
@@ -434,9 +434,9 @@ def callbacks(bot, update, user_data, job_queue):
     elif query.data == 'cancel':
         edit_text = msg_text
     elif query.data == 'save_that':
-        query.answer('✅ Successfully saved.')
+        query.answer('✅ It has been saved successfully.')
         edit_text = query.message.text_html_urled
-        edit_text += '\n\n────────\n\n✅ <b>Saved List:</b> #save_for_later\n\n'
+        edit_text += '\n\n────────\n\n✅ <b>Bookmarks:</b> #save_for_later\n\n'
         markup = InlineKeyboardMarkup([
             [
                 InlineKeyboardButton('✅ Saved', callback_data='saved_that'),
@@ -446,7 +446,7 @@ def callbacks(bot, update, user_data, job_queue):
             ]
         ])
     elif query.data == 'saved_that':
-        query.answer('❌ Successfully removed.')
+        query.answer('❌ It has been removed successfully.')
         edit_text = query.message.text_html_urled
         find_to_replace = edit_text.find('────────', -300)
         edit_text = edit_text[:find_to_replace]
@@ -495,7 +495,7 @@ def setting_callbacks(bot, update, job_queue):
         ]
         edit_text = (
             '<b>MAXIMUM RESULTS</b>\n'
-            'This setting defines the maximum number of recommendations.\n\n'
+            'This setting sets the maximum number of recommendations.\n\n'
             'Your current max result value is <b>{}</b>.'
         ).format(max_result)
     elif setting == 'result_type':
@@ -526,7 +526,7 @@ def setting_callbacks(bot, update, job_queue):
         edit_text = (
             '<b>RESULT TYPE</b>\n'
             'This setting affects the results.\n'
-            'You can define the type of your results here.\n\n'
+            'You can set your results\' type here.\n\n'
             'Your current result type is <b>{}</b>.'
             ).format(result_type)
     elif setting == 'remainings':
@@ -541,9 +541,9 @@ def setting_callbacks(bot, update, job_queue):
 
         edit_text = (
             '<b>DETAILS:</b>\n'
-            'You may check your request limit here. Every user has 10 '
-            'request right per hour to perform new query. \n\n'
-            '💎 <b>Request credits:</b> {}\n'
+            'You can check your remaining request tokens here. All users have '
+            '10 request tokens per hour to perform new query. \n\n'
+            '💎 <b>Request tokens:</b> {}\n'
             '⏱ <b>Time to fill up:</b> {}min {}sec'
             ).format(remaining_requests, mins, secs)
     elif setting == 'reset_all':
@@ -587,11 +587,11 @@ def change_settings(bot, update):
 
     if setting == 'max_result':
         user.max_result = value
-        edit_text = '✅ The max result has limited to {}.'.format(value)
+        edit_text = '✅ The max result has been limited to {}.'.format(value)
     elif setting == 'result_type':
         user.result_type = value
         value = value.replace('_', ' ')
-        edit_text = '✅ The result type has defined as {}.'.format(value)
+        edit_text = '✅ The result type has been defined as {}.'.format(value)
     elif setting == 'reset_all':
         user.max_result = 5
         user.result_type = 'all'
