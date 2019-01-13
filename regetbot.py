@@ -441,7 +441,8 @@ def callbacks(bot, update, user_data, job_queue):
             [
                 InlineKeyboardButton('✅ Saved', callback_data='saved_that'),
                 InlineKeyboardButton(
-                    '⭐️⭐️⭐️⭐️⭐️', url='https://t.me/storebot?start=regetbot')
+                    '⭐️⭐️⭐️⭐️⭐️',
+                    url='https://t.me/tlgrmcbot?start=regetbot-bot')
             ]
         ])
     elif query.data == 'saved_that':
@@ -453,7 +454,8 @@ def callbacks(bot, update, user_data, job_queue):
             [
                 InlineKeyboardButton('💾 Save', callback_data='save_that'),
                 InlineKeyboardButton(
-                    '⭐️⭐️⭐️⭐️⭐️', url='https://t.me/storebot?start=regetbot')
+                    '⭐️⭐️⭐️⭐️⭐️',
+                    url='https://t.me/tlgrmcbot?start=regetbot-bot')
             ]
         ])
 
