@@ -5,9 +5,10 @@
     Github:     @elmsec
     Twitter:    @elmsec
 
-     A Telegram bot to get recommentations
-     for TV shows, authors, bands, games,
-     books, movies based on your likes.
+    A bot that can give you
+    recommendations about TV shows,
+    authors, bands, games, books and
+    movies based on your given input.
 """
 
 import os
