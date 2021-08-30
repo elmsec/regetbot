@@ -1,13 +1,13 @@
 """
-    Author:     Eyup Can Elma
+    Author:     Eyüp Can Elma
     Date:       9 Apr. 2018
-    Github:     @canelma
-    Twitter:    @_canelma
+    Website:    https://elma.dev
+    Github:     @elmsec
+    Twitter:    @elmsec
 
-     A Telegram bot to get recom-,
-     mentations for TV shows, aut-
-     hors, bands, games, books,
-     movies; based on your likes.
+     A Telegram bot to get recommentations
+     for TV shows, authors, bands, games,
+     books, movies based on your likes.
 """
 
 import os
@@ -15,7 +15,6 @@ import sys
 import time
 import logging
 from tdclass import TasteDive
-from secrets import _secret
 # from dbhelper import DBHelper
 from database import DB, User
 from datetime import datetime
@@ -56,7 +55,7 @@ fh.setFormatter(logging.Formatter(
 logger.addHandler(fh)
 
 # list of admins to restrict other users from unauthorized functions
-LIST_OF_ADMINS = [_secret['admin_id']]
+LIST_OF_ADMINS = [os.getenv('ADMIN_ID')]
 
 time_limit = 3600
 user_request_limit = 10
@@ -198,7 +197,7 @@ def auto_fill_up(bot, job):
         user_data['fill_up_notify'] = False
         message = (
             '✅ The time has come!\n'
-            'Your token pocket has been filled up with 10 new request tokens.'
+            'Your token pocket has been refilled with 10 new request tokens.'
             )
         bot.send_message(chat_id=user_id, text=message)
 
@@ -248,7 +247,7 @@ def answer_user(bot, update, job_queue, user_data=None, result_type=None):
         message = (
             '🥀 <b>Sorry. </b> You can only use 10 request tokens per hour.\n\n'
             '⏱ Come back {}min {}sec later. '
-            'Or if you want me to do, I can call you when the time has come.'
+            'Or if you want me to do, I can notify you when the time has come.'
         ).format(mins, secs)
 
         if user_total_requests > user_request_limit:
@@ -281,7 +280,7 @@ def answer_user(bot, update, job_queue, user_data=None, result_type=None):
             '⌛️ Loading..'
         )
 
-    tastedive = TasteDive(_secret['tastedive_key'])
+    tastedive = TasteDive(os.getenv('TASTEDIVE_KEY'))
     user.total_request = user_total_requests
     user.save()
 
@@ -373,7 +372,7 @@ def text_messages(bot, update, job_queue, user_data):
                 message_id=user_data['message_id']
             )
         except Exception:
-            logger.warning('Old message can not be edited.')
+            logger.warning('Old messages can not be edited.')
 
     user_data['message_id'] = sent_message.message_id
 
@@ -428,13 +427,13 @@ def callbacks(bot, update, user_data, job_queue):
         query.answer('✅ A new reminder has been set.')
         edit_text = msg_text.find('Or if you want')
         edit_text = msg_text[:edit_text] + (
-            "<b>I'll call you when the time has come.</b>"
+            "<b>I'll notify you when the time has come.</b>"
         )
         user_data['fill_up_notify'] = True
     elif query.data == 'cancel':
         edit_text = msg_text
     elif query.data == 'save_that':
-        query.answer('✅ It has been saved successfully.')
+        query.answer('✅ It has been successfully saved.')
         edit_text = query.message.text_html_urled
         edit_text += '\n\n────────\n\n✅ <b>Bookmarks:</b> #save_for_later\n\n'
         markup = InlineKeyboardMarkup([
@@ -495,7 +494,7 @@ def setting_callbacks(bot, update, job_queue):
         ]
         edit_text = (
             '<b>MAXIMUM RESULTS</b>\n'
-            'This setting sets the maximum number of recommendations.\n\n'
+            'This setting adjusts the maximum number of recommendations.\n\n'
             'Your current max result value is <b>{}</b>.'
         ).format(max_result)
     elif setting == 'result_type':
@@ -526,7 +525,7 @@ def setting_callbacks(bot, update, job_queue):
         edit_text = (
             '<b>RESULT TYPE</b>\n'
             'This setting affects the results.\n'
-            'You can set your results\' type here.\n\n'
+            'You can set the result type here.\n\n'
             'Your current result type is <b>{}</b>.'
             ).format(result_type)
     elif setting == 'remainings':
@@ -544,7 +543,7 @@ def setting_callbacks(bot, update, job_queue):
             'You can check your remaining request tokens here. All users have '
             '10 request tokens per hour to perform new query. \n\n'
             '💎 <b>Request tokens:</b> {}\n'
-            '⏱ <b>Time to fill up:</b> {}min {}sec'
+            '⏱ <b>Time to refill:</b> {}min {}sec'
             ).format(remaining_requests, mins, secs)
     elif setting == 'reset_all':
         keyboard = [
@@ -587,11 +586,11 @@ def change_settings(bot, update):
 
     if setting == 'max_result':
         user.max_result = value
-        edit_text = '✅ The max result has been limited to {}.'.format(value)
+        edit_text = '✅ The max result has been set to {}.'.format(value)
     elif setting == 'result_type':
         user.result_type = value
         value = value.replace('_', ' ')
-        edit_text = '✅ The result type has been defined as {}.'.format(value)
+        edit_text = '✅ The result type has been set as {}.'.format(value)
     elif setting == 'reset_all':
         user.max_result = 5
         user.result_type = 'all'
@@ -616,7 +615,7 @@ def manage_jobs(bot, update, job_queue, args):
     jobs = job_queue.jobs()
 
     message = 'No such an argument.'
-    # want to run all waiting jobs to dont lose them?
+    # want to run all waiting jobs in order not to lose them?
     if args and args[0] == 'run_jobs' and len(jobs) > 0:
         for num, job in enumerate(jobs, 1):
             auto_fill_up(bot, job)
@@ -655,7 +654,7 @@ def main():
     DB.create_tables([User])
 
     # Create the Updater and pass it your bot's token.
-    updater = Updater(_secret['bot_key'])
+    updater = Updater(os.getenv('BOT_TOKEN'))
 
     # Get the dispatcher to register handlers
     dp = updater.dispatcher
