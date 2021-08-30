@@ -2,7 +2,7 @@
 A bot that can give you recommendations about movies, TV shows, games and writers based on your given input. 
 
 * [Try it now](https://t.me/regetbot)  
-* [RegetBot hakkında](https://elma.pw/tr/notes/reget-bot/) (TR)
+* [RegetBot hakkında](https://elma.dev/tr/notes/reget-bot/) (TR)
 
 ## English:
 
