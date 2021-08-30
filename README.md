@@ -1,47 +1,49 @@
 # Reget Bot
-A Telegram bot to get book, movie, TV show, author, band, game recommendations based on your likes.
+A bot that can give you recommendations about movies, TV shows, games and writers based on your given input. 
 
-* Talk to [Reget Bot on Telegram](https://t.me/regetbot)  
-* My [note](https://elma.pw/tr/notes/reget-bot/) about Reget Bot in Turkish
+* [Try it now](https://t.me/regetbot)  
+* [RegetBot hakkında](https://elma.pw/tr/notes/reget-bot/) (TR)
 
 ## English:
 
 ### Requirements
 ```
-certifi==2018.1.18
-future==0.16.0
-python-telegram-bot==10.0.1
-urllib3==1.22
+pip install -r requirements.txt
 ```
 
-### Preparation
-Create a file called `secrets.py`. Then insert these lines to it;
+### Installation
+
+Create an `.env` file in the root folder and copy the content of the file `.env.example` into your `.env` file. Update the variables and that's all.
+
+```bash
+# create an .env file
+cp .env.example .env
+
+# then edit it
+# vim .env
+
+# run the bot
+python regetbot.py
 ```
-_secret = {
-    'tastedive_key': '',
-    'bot_key': '',
-    'admin_id': ,
-}
-```
-Do not forget to add your Tastedive and bot keys to the defined fields. You can get a new Tastedive API key [here](https://tastedive.com/read/api).
+
 *************************************
 ## Türkçe:
 
 ### Gereksinimler
 ```
-certifi==2018.1.18
-future==0.16.0
-python-telegram-bot==10.0.1
-urllib3==1.22
+pip install -r requirements.txt
 ```
 
-### Hazırlık
-`secrets.py` isminde bir dosya oluşturun. Ardından, aşağıdaki satırları içerisine ekleyin;
+### Kurulum
+Ana dizinde `.env` isminde bir dosya oluşturun. `.env.example` dosyasının içeriğini bu dosyaya kopyalayın. Değişkenleri güncelleyin.
+
+```bash
+# .env dosyası oluştur
+cp .env.example .env
+
+# düzenle
+# vim .env
+
+# botu çalıştır
+python regetbot.py
 ```
-_secret = {
-    'tastedive_key': '',
-    'bot_key': '',
-    'admin_id': ,
-}
-```
-Belirlenmiş alanlara Tastedive ve bot anahtarınızı eklemeyi unutmayın. Yeni bir Tastedive API anahtarını [buradan](https://tastedive.com/read/api) edinebilirsiniz.
