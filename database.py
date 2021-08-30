@@ -7,8 +7,8 @@ DB = peewee.SqliteDatabase('settings.db')
 
 class BaseDatabaseModel(peewee.Model):
     """
-        Base database model
-        to prevent DRY for 'class Meta:'
+    Base database model
+    to prevent DRY for 'class Meta:'
     """
     class Meta:
         database = DB
@@ -16,8 +16,7 @@ class BaseDatabaseModel(peewee.Model):
 
 class User(BaseDatabaseModel):
     """
-        User model for the database.
-        It contains all users who used the bot
+    User model for the database.
     """
     telegram_id = peewee.IntegerField(unique=True)
     first_name = peewee.CharField(max_length=100)
