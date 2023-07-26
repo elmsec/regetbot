@@ -1,5 +1,5 @@
 certifi==2023.7.22
-future==0.16.0
+future==0.18.3
 peewee==3.7.1
 python-telegram-bot==10.0.1
 urllib3==1.26.5
