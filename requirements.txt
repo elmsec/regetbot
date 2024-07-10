@@ -2,4 +2,4 @@ certifi==2024.7.4
 future==0.16.0
 peewee==3.7.1
 python-telegram-bot==10.0.1
-urllib3==1.26.18
+urllib3==1.26.19
